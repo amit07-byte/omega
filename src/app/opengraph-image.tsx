@@ -38,7 +38,7 @@ export default function OpenGraphImage() {
                 height: 18,
                 borderRadius: 999,
                 background: "#F6F3EC",
-                marginRight: -6,
+                marginRight: 4,
               }}
             />
             <div

@@ -13,14 +13,14 @@ export function LogoMark({ className }: LogoMarkProps) {
         className="size-9 shrink-0"
       >
         <rect width="32" height="32" rx="9" className="fill-primary" />
-        <circle cx="13.5" cy="16" r="5.25" className="fill-primary-foreground" />
+        <circle cx="12" cy="16" r="4.6" className="fill-primary-foreground" />
         <circle
-          cx="19.25"
+          cx="20"
           cy="16"
-          r="4.4"
+          r="4.6"
           fill="none"
           className="stroke-primary-foreground"
-          strokeWidth="1.7"
+          strokeWidth="1.6"
         />
       </svg>
       <span className="font-heading text-xl tracking-tight">Omega</span>

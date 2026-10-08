@@ -9,6 +9,7 @@ export default function Icon() {
 
 function Mark({ size: box }: { size: number }) {
   const circle = Math.round(box * 0.34);
+  const gap = Math.round(box * 0.06);
   return (
     <div
       style={{
@@ -27,7 +28,7 @@ function Mark({ size: box }: { size: number }) {
           height: circle,
           borderRadius: 999,
           background: "#F6F3EC",
-          marginRight: Math.round(box * -0.08),
+          marginRight: gap,
         }}
       />
       <div
