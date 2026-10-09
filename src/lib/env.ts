@@ -1,7 +1,7 @@
 /**
- * Public configuration reserved for this app and a future Supabase integration.
- * Reading these values does not connect to Auth, PostgreSQL, or Storage.
- * Server-only secrets, including a Supabase service role key, do not belong here.
+ * Public configuration for this app and Supabase Auth.
+ * These values are safe to expose in the browser.
+ * A service role key is a server secret and must never use the NEXT_PUBLIC_ prefix.
  */
 
 export type PublicEnv = {
@@ -10,19 +10,19 @@ export type PublicEnv = {
   supabaseAnonKey: string | undefined;
 };
 
-function read(name: string): string | undefined {
-  const value = process.env[name]?.trim();
-  return value ? value : undefined;
+function present(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
 }
 
-function readOrigin(name: string): string | undefined {
-  const value = read(name);
-  if (!value) {
+function readOrigin(value: string | undefined): string | undefined {
+  const raw = present(value);
+  if (!raw) {
     return undefined;
   }
 
   try {
-    const url = new URL(value);
+    const url = new URL(raw);
     if (url.protocol !== "http:" && url.protocol !== "https:") {
       return undefined;
     }
@@ -33,7 +33,20 @@ function readOrigin(name: string): string | undefined {
 }
 
 export const publicEnv: PublicEnv = {
-  siteUrl: readOrigin("NEXT_PUBLIC_SITE_URL"),
-  supabaseUrl: readOrigin("NEXT_PUBLIC_SUPABASE_URL"),
-  supabaseAnonKey: read("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+  siteUrl: readOrigin(process.env.NEXT_PUBLIC_SITE_URL),
+  supabaseUrl: readOrigin(process.env.NEXT_PUBLIC_SUPABASE_URL),
+  supabaseAnonKey: present(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
 };
+
+export function requireSupabasePublicEnv(): { url: string; anonKey: string } {
+  if (!publicEnv.supabaseUrl || !publicEnv.supabaseAnonKey) {
+    throw new Error(
+      "Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY before using authentication.",
+    );
+  }
+
+  return {
+    url: publicEnv.supabaseUrl,
+    anonKey: publicEnv.supabaseAnonKey,
+  };
+}
