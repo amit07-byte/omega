@@ -74,7 +74,7 @@ export async function signup(formData: FormData) {
   redirectWith(
     "/signup",
     "notice",
-    "Check your email and open the confirmation link, then log in.",
+    "Check your email and open the confirmation link.",
   );
 }
 
