@@ -2,7 +2,7 @@
 
 Omega is a marketplace that connects local businesses with creators. Businesses publish collaboration campaigns. Creators discover work nearby and apply.
 
-This repository is the production foundation and public landing page. Accounts, campaigns, applications, and other marketplace features are not built yet.
+This repository is the production foundation, public landing page, and email/password accounts. Campaigns, applications, and other marketplace features are not built yet.
 
 ## Technology stack
 
@@ -10,7 +10,7 @@ This repository is the production foundation and public landing page. Accounts, 
 - TypeScript
 - Tailwind CSS
 - [shadcn/ui](https://ui.shadcn.com/)
-- Supabase is planned for Auth, PostgreSQL, and Storage
+- Supabase Auth and PostgreSQL, with a profiles table protected by row level security
 - Vercel is the deployment target
 
 ## Local development
@@ -25,7 +25,9 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-`.env.local` is gitignored. The example file contains no secrets. Supabase variables are reserved for later and are unused today.
+`.env.local` is gitignored. The example file contains no secrets. Signup and login read `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+
+Apply `supabase/migrations/20261009160000_auth_profiles.sql` in the Supabase SQL editor before expecting a profile row. The app does not ship a service role key, so it cannot create that table itself. If the project requires email confirmation, a new account can log in after the confirmation link is opened.
 
 ### Scripts
 
@@ -48,16 +50,16 @@ src/
     layout/             Header, footer, and page chrome
     ui/                 Reusable interface primitives
   config/               Site copy and navigation
-  lib/                  Shared helpers and public environment access
+  lib/                  Shared helpers, Supabase clients, and auth actions
+supabase/migrations/    SQL for the profiles table, trigger, and row level security
 .env.example            Documented public environment variables
 ```
 
 ## Planned V1 modules
 
-These are not implemented:
+Authentication is implemented for signup, login, logout, and a private account page. These are not implemented:
 
-- Supabase Auth for businesses and creators
-- PostgreSQL models for profiles, campaigns, and applications
+- PostgreSQL models for campaigns and applications
 - Supabase Storage for creative assets
 - Campaign publishing
 - Creator discovery and applications

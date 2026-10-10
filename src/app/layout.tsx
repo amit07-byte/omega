@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Geist, Geist_Mono } from "next/font/google";
+import { AuthHashSession } from "@/components/auth/confirm-session";
 import { SkipLink } from "@/components/layout/skip-link";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -73,6 +74,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="flex min-h-dvh flex-col bg-background text-foreground">
+        <AuthHashSession />
         <SkipLink />
         <SiteHeader />
         <main id="main-content" className="flex-1">
