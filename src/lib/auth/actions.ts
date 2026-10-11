@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { parseLogin, parseSignup } from "@/lib/auth/credentials";
+import { destinationAfterAuth } from "@/lib/auth/onboarding";
 import { publicEnv } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -40,7 +41,7 @@ export async function login(formData: FormData) {
     redirectWith("/login", "error", error.message);
   }
 
-  redirect("/account");
+  redirect(await destinationAfterAuth(supabase));
 }
 
 export async function signup(formData: FormData) {
@@ -68,7 +69,7 @@ export async function signup(formData: FormData) {
   }
 
   if (data.session) {
-    redirect("/account");
+    redirect(await destinationAfterAuth(supabase));
   }
 
   redirectWith(
