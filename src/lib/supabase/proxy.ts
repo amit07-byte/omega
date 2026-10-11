@@ -71,7 +71,9 @@ export async function updateSession(request: NextRequest) {
 
   if (signedIn && needsProfile) {
     const destination = await destinationAfterAuth(supabase);
-    if (destination !== "/login" && pathname !== destination) {
+    const editingBusinessProfile =
+      pathname === "/business/onboarding" && destination === "/account";
+    if (destination !== "/login" && pathname !== destination && !editingBusinessProfile) {
       return redirectTo(request, supabaseResponse, destination);
     }
   }

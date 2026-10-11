@@ -1,14 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isBusinessProfileComplete } from "@/lib/auth/business-profile";
 import { isAccountRole, type AccountRole } from "@/lib/auth/credentials";
 
 export function onboardingPathForRole(role: AccountRole) {
   return role === "business" ? "/business/onboarding" : "/creator/onboarding";
 }
 
-/**
- * The profiles row stores the signup role. It is not a finished business or
- * creator profile, and those profiles are not in the current schema.
- */
 export async function destinationAfterAuth(supabase: SupabaseClient) {
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) {
@@ -27,6 +24,10 @@ export async function destinationAfterAuth(supabase: SupabaseClient) {
     : isAccountRole(metadataRole)
       ? metadataRole
       : null;
+
+  if (role === "business" && isBusinessProfileComplete(data.user.user_metadata)) {
+    return "/account";
+  }
 
   if (!role) {
     return "/account";
