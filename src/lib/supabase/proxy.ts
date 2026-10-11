@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { destinationAfterAuth } from "@/lib/auth/onboarding";
 import { publicEnv } from "@/lib/env";
 
 const CACHE_HEADERS = ["cache-control", "expires", "pragma"] as const;
@@ -15,6 +16,17 @@ function copySession(from: NextResponse, to: NextResponse) {
     }
   }
   return to;
+}
+
+function redirectTo(request: NextRequest, session: NextResponse, pathname: string) {
+  const redirectUrl = request.nextUrl.clone();
+  redirectUrl.pathname = pathname;
+  redirectUrl.search = "";
+  return copySession(session, NextResponse.redirect(redirectUrl));
+}
+
+function isOnboardingRoute(pathname: string) {
+  return pathname === "/business/onboarding" || pathname === "/creator/onboarding";
 }
 
 export async function updateSession(request: NextRequest) {
@@ -50,12 +62,18 @@ export async function updateSession(request: NextRequest) {
 
   const { data } = await supabase.auth.getClaims();
   const signedIn = Boolean(data?.claims.sub);
+  const pathname = request.nextUrl.pathname;
+  const needsProfile = pathname.startsWith("/account") || isOnboardingRoute(pathname);
 
-  if (!signedIn && request.nextUrl.pathname.startsWith("/account")) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/login";
-    redirectUrl.search = "";
-    return copySession(supabaseResponse, NextResponse.redirect(redirectUrl));
+  if (!signedIn && needsProfile) {
+    return redirectTo(request, supabaseResponse, "/login");
+  }
+
+  if (signedIn && needsProfile) {
+    const destination = await destinationAfterAuth(supabase);
+    if (destination !== "/login" && pathname !== destination) {
+      return redirectTo(request, supabaseResponse, destination);
+    }
   }
 
   return supabaseResponse;

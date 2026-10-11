@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/lib/auth/actions";
+import { onboardingPathForRole } from "@/lib/auth/onboarding";
 import { loadAccount } from "@/lib/auth/profile";
 
 export const metadata: Metadata = {
@@ -27,6 +28,9 @@ async function AccountDetails() {
   const account = await loadAccount();
   if (!account) {
     redirect("/login");
+  }
+  if (account.profile?.role) {
+    redirect(onboardingPathForRole(account.profile.role));
   }
 
   return (
