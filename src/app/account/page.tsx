@@ -4,7 +4,9 @@ import { redirect } from "next/navigation";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/lib/auth/actions";
+import { destinationAfterAuth } from "@/lib/auth/onboarding";
 import { loadAccount } from "@/lib/auth/profile";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Account",
@@ -27,6 +29,10 @@ async function AccountDetails() {
   const account = await loadAccount();
   if (!account) {
     redirect("/login");
+  }
+  const destination = await destinationAfterAuth(await createClient());
+  if (destination !== "/account" && destination !== "/login") {
+    redirect(destination);
   }
 
   return (

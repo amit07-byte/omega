@@ -8,6 +8,7 @@ import {
   emailOtpType,
   safeNext,
 } from "@/lib/auth/confirm";
+import { destinationAfterAuth } from "@/lib/auth/onboarding";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -61,7 +62,8 @@ async function ConfirmRequest({ searchParams }: ConfirmPageProps) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(params.code);
     if (!error) {
-      redirect(next);
+      const destination = await destinationAfterAuth(supabase);
+      redirect(destination === "/account" ? next : destination);
     }
     return <ConfirmSession initialError={confirmationErrorMessage(error.message)} />;
   }
@@ -74,7 +76,8 @@ async function ConfirmRequest({ searchParams }: ConfirmPageProps) {
       token_hash: params.token_hash,
     });
     if (!error) {
-      redirect(next);
+      const destination = await destinationAfterAuth(supabase);
+      redirect(destination === "/account" ? next : destination);
     }
     return <ConfirmSession initialError={confirmationErrorMessage(error.message)} />;
   }
