@@ -4,6 +4,11 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { parseLogin, parseSignup } from "@/lib/auth/credentials";
 import { destinationAfterAuth } from "@/lib/auth/onboarding";
+import {
+  createPasswordGrantCapture,
+  decidePasswordLogin,
+  publicAuthMessage,
+} from "@/lib/auth/password-grant";
 import { publicEnv } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -35,13 +40,27 @@ export async function login(formData: FormData) {
     redirectWith("/login", "error", parsed.message);
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.value);
-  if (error) {
-    redirectWith("/login", "error", error.message);
+  const capture = createPasswordGrantCapture();
+  const supabase = await createClient({ fetch: capture.fetch });
+  const result = await supabase.auth.signInWithPassword(parsed.value);
+  const decision = decidePasswordLogin(result, capture.body());
+
+  if (decision.type === "failed") {
+    redirectWith("/login", "error", decision.message);
   }
 
-  redirect(await destinationAfterAuth(supabase));
+  if (decision.type === "restore") {
+    const restored = await supabase.auth.setSession({
+      access_token: decision.accessToken,
+      refresh_token: decision.refreshToken,
+    });
+    if (restored.error || !restored.data.session || !restored.data.user) {
+      redirectWith("/login", "error", publicAuthMessage(restored.error, null));
+    }
+    redirect(await destinationAfterAuth(supabase, restored.data.user));
+  }
+
+  redirect(await destinationAfterAuth(supabase, result.data.user));
 }
 
 export async function signup(formData: FormData) {
