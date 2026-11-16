@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { AuthScreen, authFieldClassName } from "@/components/auth/auth-screen";
 import { Button } from "@/components/ui/button";
 import { login } from "@/lib/auth/actions";
+import { publicAuthMessage } from "@/lib/auth/password-grant";
 
 export const metadata: Metadata = {
   title: "Log in",
@@ -33,12 +34,13 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
 
 async function LoginForm({ searchParams }: LoginPageProps) {
   const { error } = await searchParams;
+  const message = error ? publicAuthMessage({ message: error }, null) : null;
 
   return (
       <form action={login} className="mt-8 grid gap-4">
-        {error ? (
+        {message ? (
           <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {error}
+            {message}
           </p>
         ) : null}
         <label className="grid gap-2 text-sm font-medium">

@@ -60,8 +60,13 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  const { data } = await supabase.auth.getClaims();
-  const signedIn = Boolean(data?.claims.sub);
+  let signedIn = false;
+  try {
+    const { data } = await supabase.auth.getClaims();
+    signedIn = Boolean(data?.claims?.sub);
+  } catch {
+    signedIn = false;
+  }
   const pathname = request.nextUrl.pathname;
   const needsProfile = pathname.startsWith("/account") || isOnboardingRoute(pathname);
 
