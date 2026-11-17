@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Geist, Geist_Mono } from "next/font/google";
 import { AuthHashSession } from "@/components/auth/confirm-session";
@@ -74,7 +75,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="flex min-h-dvh flex-col bg-background text-foreground">
-        <AuthHashSession />
+        <Suspense fallback={null}>
+          <AuthHashSession />
+        </Suspense>
         <SkipLink />
         <SiteHeader />
         <main id="main-content" className="flex-1">

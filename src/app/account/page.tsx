@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/lib/auth/actions";
@@ -31,9 +32,23 @@ async function AccountDetails() {
     redirect("/login");
   }
   const destination = await destinationAfterAuth(await createClient());
-  if (destination !== "/account" && destination !== "/login") {
+  if (destination === "/business/onboarding" || destination === "/creator/onboarding") {
     redirect(destination);
   }
+
+  const links = account.profile?.role === "business"
+    ? [
+        { href: "/business/campaigns", label: "Your campaigns" },
+        { href: "/business/pricing", label: "Pricing" },
+        { href: "/business/onboarding", label: "Business profile" },
+      ]
+    : account.profile?.role === "creator"
+      ? [
+          { href: "/campaigns", label: "Browse campaigns" },
+          { href: "/creator/applications", label: "Your applications" },
+          { href: "/creator/onboarding", label: "Creator profile" },
+        ]
+      : [];
 
   return (
       <div className="mx-auto w-full max-w-lg">
@@ -55,6 +70,17 @@ async function AccountDetails() {
             </dd>
           </div>
         </dl>
+        {links.length > 0 ? (
+          <ul className="mt-6 grid gap-2">
+            {links.map((link) => (
+              <li key={link.href}>
+                <Link href={link.href} className="text-sm font-medium text-primary">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : null}
         {account.profileMessage ? (
           <p role="status" className="mt-4 text-sm leading-6 text-muted-foreground">
             {account.profileMessage}

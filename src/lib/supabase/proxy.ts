@@ -25,8 +25,12 @@ function redirectTo(request: NextRequest, session: NextResponse, pathname: strin
   return copySession(session, NextResponse.redirect(redirectUrl));
 }
 
-function isOnboardingRoute(pathname: string) {
-  return pathname === "/business/onboarding" || pathname === "/creator/onboarding";
+function isProtectedPath(pathname: string) {
+  return (
+    pathname.startsWith("/account") ||
+    pathname.startsWith("/business") ||
+    pathname.startsWith("/creator")
+  );
 }
 
 export async function updateSession(request: NextRequest) {
@@ -68,18 +72,23 @@ export async function updateSession(request: NextRequest) {
     signedIn = false;
   }
   const pathname = request.nextUrl.pathname;
-  const needsProfile = pathname.startsWith("/account") || isOnboardingRoute(pathname);
 
-  if (!signedIn && needsProfile) {
+  if (!signedIn && isProtectedPath(pathname)) {
     return redirectTo(request, supabaseResponse, "/login");
   }
 
-  if (signedIn && needsProfile) {
+  if (signedIn && (isProtectedPath(pathname) || pathname.startsWith("/campaigns"))) {
     const destination = await destinationAfterAuth(supabase);
-    const editingBusinessProfile =
-      pathname === "/business/onboarding" && destination === "/account";
-    if (destination !== "/login" && pathname !== destination && !editingBusinessProfile) {
+    const incomplete =
+      destination === "/business/onboarding" || destination === "/creator/onboarding";
+    if (incomplete && pathname !== destination) {
       return redirectTo(request, supabaseResponse, destination);
+    }
+    if (!incomplete && destination === "/business/campaigns" && pathname.startsWith("/creator")) {
+      return redirectTo(request, supabaseResponse, "/business/campaigns");
+    }
+    if (!incomplete && destination === "/campaigns" && pathname.startsWith("/business")) {
+      return redirectTo(request, supabaseResponse, "/campaigns");
     }
   }
 

@@ -1,70 +1,76 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
+import { authFieldClassName } from "@/components/auth/auth-screen";
 import { Container } from "@/components/layout/container";
+import { Feedback } from "@/components/marketplace/feedback";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/lib/auth/actions";
-import { onboardingPathForRole } from "@/lib/auth/onboarding";
-import { loadAccount } from "@/lib/auth/profile";
+import { requireAccount } from "@/lib/marketplace/access";
+import { saveCreatorProfile } from "@/lib/marketplace/actions";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Creator onboarding",
+  title: "Creator profile",
   robots: { index: false, follow: false },
 };
 
-export default function CreatorOnboardingPage() {
+type CreatorOnboardingPageProps = {
+  searchParams: Promise<{ error?: string; notice?: string }>;
+};
+
+export default function CreatorOnboardingPage({ searchParams }: CreatorOnboardingPageProps) {
   return (
     <Container className="py-16 sm:py-20">
-      <Suspense
-        fallback={<p className="text-sm text-muted-foreground">Loading your account…</p>}
-      >
-        <CreatorOnboarding />
+      <Suspense fallback={<p className="text-sm text-muted-foreground">Loading your profile…</p>}>
+        <CreatorProfileForm searchParams={searchParams} />
       </Suspense>
     </Container>
   );
 }
 
-async function CreatorOnboarding() {
-  const account = await loadAccount();
-  if (!account) {
-    redirect("/login");
-  }
-  if (account.profile?.role && account.profile.role !== "creator") {
-    redirect(onboardingPathForRole(account.profile.role));
-  }
+async function CreatorProfileForm({ searchParams }: CreatorOnboardingPageProps) {
+  const account = await requireAccount("creator");
+  const query = await searchParams;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("creator_profiles")
+    .select("display_name, craft, bio, city, neighborhood")
+    .eq("id", account.userId)
+    .maybeSingle();
 
   return (
     <div className="mx-auto w-full max-w-lg">
-      <p className="text-sm font-medium tracking-wide text-primary uppercase">
-        Creator
+      <p className="text-sm font-medium tracking-wide text-primary uppercase">Creator</p>
+      <h1 className="mt-3 font-heading text-3xl tracking-tight">Your profile</h1>
+      <p className="mt-3 text-sm leading-6 text-muted-foreground">
+        Businesses see this when you apply. Creator accounts are free.
       </p>
-      <h1 className="mt-3 font-heading text-3xl tracking-tight">
-        Set up your creator profile
-      </h1>
-      <p className="mt-3 text-base leading-7 text-muted-foreground">
-        Your creator profile is not finished yet.
-      </p>
-      <dl className="mt-8 grid gap-4 rounded-3xl border bg-card p-6">
-        <div>
-          <dt className="text-sm text-muted-foreground">Email</dt>
-          <dd className="mt-1 text-base">{account.email}</dd>
-        </div>
-        <div>
-          <dt className="text-sm text-muted-foreground">Role</dt>
-          <dd className="mt-1 text-base capitalize">
-            {account.profile?.role ?? "Not stored"}
-          </dd>
-        </div>
-      </dl>
-      {account.profileMessage ? (
-        <p role="status" className="mt-4 text-sm leading-6 text-muted-foreground">
-          {account.profileMessage}
-        </p>
-      ) : null}
-      <form action={signOut} className="mt-8">
-        <Button type="submit" variant="outline" size="cta">
-          Log out
-        </Button>
+      <form action={saveCreatorProfile} className="mt-8 grid gap-4">
+        <Feedback error={query.error} notice={query.notice} />
+        <label className="grid gap-2 text-sm font-medium">
+          Name
+          <input className={authFieldClassName} name="displayName" required minLength={2} maxLength={80} defaultValue={data?.display_name ?? account.profile?.displayName ?? ""} />
+        </label>
+        <label className="grid gap-2 text-sm font-medium">
+          Craft
+          <input className={authFieldClassName} name="craft" required minLength={2} maxLength={40} placeholder="Photographer" defaultValue={data?.craft ?? ""} />
+        </label>
+        <label className="grid gap-2 text-sm font-medium">
+          Bio
+          <textarea className={`${authFieldClassName} h-auto py-3`} name="bio" required minLength={10} maxLength={600} rows={5} defaultValue={data?.bio ?? ""} />
+        </label>
+        <label className="grid gap-2 text-sm font-medium">
+          City
+          <input className={authFieldClassName} name="city" required minLength={2} maxLength={80} defaultValue={data?.city ?? ""} />
+        </label>
+        <label className="grid gap-2 text-sm font-medium">
+          Neighborhood
+          <input className={authFieldClassName} name="neighborhood" required minLength={2} maxLength={80} defaultValue={data?.neighborhood ?? ""} />
+        </label>
+        <Button type="submit" size="cta">Save profile</Button>
+      </form>
+      <form action={signOut} className="mt-6">
+        <Button type="submit" variant="outline" size="cta">Log out</Button>
       </form>
     </div>
   );

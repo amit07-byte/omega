@@ -2,7 +2,7 @@
 
 Omega is a marketplace that connects local businesses with creators. Businesses publish collaboration campaigns. Creators discover work nearby and apply.
 
-This repository is the production foundation, public landing page, and email/password accounts. Campaigns, applications, and other marketplace features are not built yet.
+Businesses create a profile, publish collaboration campaigns, and accept or reject applications. Creators create a profile, browse published campaigns, and track application status. The first business campaign is free. Another campaign requires a paid plan, and checkout is not connected yet. Creators use Omega for free.
 
 ## Technology stack
 
@@ -51,18 +51,16 @@ src/
     ui/                 Reusable interface primitives
   config/               Site copy and navigation
   lib/                  Shared helpers, Supabase clients, and auth actions
-supabase/migrations/    SQL for the profiles table, trigger, and row level security
+supabase/migrations/    SQL for profiles, campaigns, applications, and row level security
 .env.example            Documented public environment variables
 ```
 
 ## Planned V1 modules
 
-Authentication is implemented for signup, login, logout, and a private account page. These are not implemented:
+Apply both files in `supabase/migrations/` in the Supabase SQL editor before using campaigns. The app does not use a service-role key and cannot create the tables itself.
 
-- PostgreSQL models for campaigns and applications
-- Supabase Storage for creative assets
-- Campaign publishing
-- Creator discovery and applications
-- Business and creator dashboards
+Signup, login, profiles, campaign publishing, applications, and the business pricing screen are implemented. These are not implemented:
+
+- Payment checkout. The pricing screen does not mark a plan as paid.
 - Messaging
-- Payments
+- Escrow and analytics
