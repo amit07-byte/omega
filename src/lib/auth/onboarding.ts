@@ -32,13 +32,24 @@ export async function destinationAfterAuth(
       ? metadataRole
       : null;
 
-  if (role === "business" && isBusinessProfileComplete(user.user_metadata)) {
-    return "/account";
-  }
-
   if (!role) {
     return "/account";
   }
 
-  return onboardingPathForRole(role);
+  if (role === "business") {
+    return isBusinessProfileComplete(user.user_metadata)
+      ? "/business/campaigns"
+      : "/business/onboarding";
+  }
+
+  const creator = await supabase
+    .from("creator_profiles")
+    .select("id")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (creator.data) {
+    return "/campaigns";
+  }
+
+  return "/creator/onboarding";
 }

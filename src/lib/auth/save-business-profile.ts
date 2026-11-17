@@ -7,6 +7,7 @@ import {
   type BusinessProfileInput,
 } from "@/lib/auth/business-profile";
 import { isAccountRole } from "@/lib/auth/credentials";
+import { marketplaceErrorMessage } from "@/lib/marketplace/errors";
 import { createClient } from "@/lib/supabase/server";
 
 const logoTypes = new Map([
@@ -81,6 +82,20 @@ export async function saveBusinessProfile(formData: FormData) {
     redirectWith(updateError.message);
   }
 
+  const { error: businessError } = await supabase.from("business_profiles").upsert({
+    id: data.user.id,
+    business_name: parsed.value.businessName,
+    category: parsed.value.category,
+    description: parsed.value.description,
+    website: parsed.value.website,
+    city: parsed.value.city,
+    neighborhood: parsed.value.neighborhood,
+    updated_at: new Date().toISOString(),
+  });
+  if (businessError) {
+    redirectWith(marketplaceErrorMessage(businessError));
+  }
+
   if (logo instanceof File && logo.size > 0 && nextLogoPath !== logoPath) {
     const { error: uploadError } = await supabase.storage.from("logos").upload(nextLogoPath, logo, {
       upsert: true,
@@ -99,5 +114,5 @@ export async function saveBusinessProfile(formData: FormData) {
     }
   }
 
-  redirect("/account");
+  redirect("/business/campaigns");
 }

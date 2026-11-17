@@ -84,18 +84,38 @@ export async function signup(formData: FormData) {
   });
 
   if (error) {
-    redirectWith("/signup", "error", error.message);
+    const alreadyRegistered = /already|registered|exists/i.test(error.message);
+    redirectWith(
+      "/signup",
+      "error",
+      alreadyRegistered
+        ? "An account with this email already exists. Log in instead."
+        : error.message,
+    );
   }
 
   if (data.session) {
-    redirect(await destinationAfterAuth(supabase));
+    redirect(await destinationAfterAuth(supabase, data.user));
   }
 
-  redirectWith(
-    "/signup",
-    "notice",
-    "Check your email and open the confirmation link.",
-  );
+  const identities = data.user?.identities;
+  if (data.user && Array.isArray(identities) && identities.length === 0) {
+    redirectWith(
+      "/signup",
+      "error",
+      "An account with this email already exists. Log in instead.",
+    );
+  }
+
+  if (data.user) {
+    redirectWith(
+      "/signup",
+      "notice",
+      "Check your email and open the confirmation link.",
+    );
+  }
+
+  redirectWith("/signup", "error", "Sign-up could not be completed. Try again.");
 }
 
 export async function signOut() {
